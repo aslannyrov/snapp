@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Meteor Breaking Camp — Судейство</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050507;
+    --bg-2: #0B0B10;
+    --bg-3: #15151B;
+    --bg-4: #1F1F28;
+    --border: #2A2A35;
+    --border-bright: rgba(251,146,60,0.3);
+    --text: #FFFFFF;
+    --text-dim: #A1A1AA;
+    --text-low: #71717A;
+    --red-1: #DC2626;
+    --red-2: #F87171;
+    --blue-1: #3B82F6;
+    --blue-2: #22D3EE;
+    --orange: #FB923C;
+    --yellow: #FACC15;
+    --green: #4ADE80;
+    --display-font: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
+    --heading-font: 'Oswald', sans-serif;
+    --body-font: 'Rajdhani', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body-font);
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+  }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(220,38,38,0.15), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.15), transparent 50%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  .app { max-width: 1100px; margin: 0 auto; padding: 24px 18px 60px; }
+
+  .header { text-align: center; margin-bottom: 22px; }
+  .header h1 {
+    font-family: var(--display-font);
+    font-size: clamp(38px, 7vw, 64px);
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    background: linear-gradient(90deg, #EF4444 0%, #FB923C 50%, #3B82F6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 0.95;
+  }
+  .header .sub {
+    font-family: var(--heading-font);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 10px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    font-family: var(--heading-font);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-low); }
+  .status-dot.on { background: var(--green); box-shadow: 0 0 10px rgba(74,222,128,0.7); }
+  .status-dot.err { background: var(--red-2); }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-bright);
+    border-radius: 22px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(220,38,38,0.07), transparent 50%, rgba(59,130,246,0.07));
+    pointer-events: none;
+  }
+  .card > * { position: relative; }
+  .card h2 {
+    font-family: var(--display-font);
+    font-size: 28px; letter-spacing: 0.06em;
+    color: var(--orange); margin: 0 0 6px;
+  }
+  .card .hint {
+    font-family: var(--heading-font);
+    color: var(--text-low);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+    margin: 0 0 14px;
+  }
+
+  .field-label {
+    font-family: var(--heading-font);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
+    color: var(--text-low); font-weight: 700;
+    margin: 12px 0 6px;
+  }
+  .text-input {
+    width: 100%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: white;
+    font-family: var(--display-font);
+    font-size: 22px; letter-spacing: 0.06em;
+    padding: 12px 14px;
+    outline: none;
+    text-transform: uppercase;
+  }
+  .text-input:focus { border-color: var(--orange); }
+  .text-input.body { font-family: var(--body-font); font-weight: 600; font-size: 17px; text-transform: none; }
+
+  .btn {
+    font-family: var(--display-font);
+    font-size: 20px; letter-spacing: 0.12em;
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    width: 100%;
+    margin-top: 12px;
+    transition: transform .12s, filter .15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: linear-gradient(90deg, #DC2626 0%, #F97316 50%, #3B82F6 100%); box-shadow: 0 10px 26px -10px rgba(220,38,38,0.55); }
+  .btn.orange { background: linear-gradient(90deg, #F97316, #DC2626); }
+  .btn.dark { background: var(--bg-4); border: 1px solid var(--border); color: var(--text-dim); }
+  .btn.gold { background: linear-gradient(90deg, #FACC15, #FB923C); color: #000; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .qr-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    display: inline-block;
+    margin: 8px 0;
+  }
+  .room-code {
+    font-family: var(--display-font);
+    font-size: 44px; letter-spacing: 0.25em;
+    color: var(--yellow);
+    text-shadow: 0 0 24px rgba(250,204,21,0.45);
+  }
+  .room-link {
+    font-family: var(--heading-font);
+    font-size: 12px;
+    color: var(--text-dim);
+    word-break: break-all;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 8px;
+  }
+
+  .judges-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .judge-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .judge-name {
+    font-family: var(--display-font);
+    font-size: 20px; letter-spacing: 0.06em;
+  }
+  .judge-vote-chip {
+    font-family: var(--display-font);
+    font-size: 16px; letter-spacing: 0.08em;
+    padding: 4px 14px; border-radius: 10px;
+    color: white;
+  }
+  .judge-vote-chip.red { background: linear-gradient(90deg, #DC2626, #F87171); }
+  .judge-vote-chip.blue { background: linear-gradient(90deg, #3B82F6, #22D3EE); }
+  .judge-vote-chip.none { background: var(--bg-4); color: var(--text-low); }
+
+  .tally {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 12px;
+    margin: 14px 0;
+  }
+  .tally-side {
+    border-radius: 16px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .tally-side.red { background: linear-gradient(135deg, #DC2626, #F87171); }
+  .tally-side.blue { background: linear-gradient(135deg, #3B82F6, #22D3EE); }
+  .tally-side .nm {
+    font-family: var(--display-font);
+    font-size: 24px; letter-spacing: 0.06em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .tally-side .cnt {
+    font-family: var(--display-font);
+    font-size: 64px; line-height: 1;
+    text-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  }
+  .tally-vs {
+    font-family: var(--display-font);
+    font-size: 26px; color: var(--orange);
+  }
+  .tally-side.win { outline: 4px solid var(--yellow); box-shadow: 0 0 36px -6px rgba(250,204,21,0.8); }
+
+  .verdict {
+    text-align: center;
+    font-family: var(--display-font);
+    font-size: 34px; letter-spacing: 0.08em;
+    color: var(--yellow);
+    margin: 8px 0 2px;
+    min-height: 40px;
+  }
+
+  .history-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-family: var(--display-font);
+    font-size: 18px; letter-spacing: 0.05em;
+  }
+  .history-row .score { color: var(--orange); }
+  .history-row .w-red { color: var(--red-2); }
+  .history-row .w-blue { color: #7DD3FC; }
+
+  /* JUDGE VOTING */
+  .vote-stage { display: flex; flex-direction: column; gap: 14px; }
+  .vote-btn {
+    border: none;
+    border-radius: 22px;
+    padding: 12px;
+    min-height: 32vh;
+    width: 100%;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    transition: transform .1s, outline .15s;
+    outline: 4px solid transparent;
+  }
+  .vote-btn:active { transform: scale(0.97); }
+  .vote-btn.red { background: linear-gradient(135deg, #DC2626, #F87171); box-shadow: 0 14px 34px -12px rgba(220,38,38,0.65); }
+  .vote-btn.blue { background: linear-gradient(135deg, #3B82F6, #22D3EE); box-shadow: 0 14px 34px -12px rgba(59,130,246,0.65); }
+  .vote-btn.selected { outline: 5px solid var(--yellow); box-shadow: 0 0 40px -4px rgba(250,204,21,0.85); }
+  .vote-btn .side-label {
+    font-family: var(--heading-font);
+    font-size: 12px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); font-weight: 700;
+  }
+  .vote-btn .nick {
+    font-family: var(--display-font);
+    font-size: clamp(34px, 9vw, 58px);
+    letter-spacing: 0.06em;
+    color: white;
+    text-shadow: 0 3px 8px rgba(0,0,0,0.45);
+    line-height: 1;
+    max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .vote-status {
+    text-align: center;
+    font-family: var(--heading-font);
+    font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-dim);
+    min-height: 20px;
+  }
+  .waiting-block {
+    text-align: center;
+    padding: 36px 12px;
+  }
+  .waiting-block .big {
+    font-family: var(--display-font);
+    font-size: 30px; letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+  .pulse {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 5px solid rgba(255,255,255,0.12);
+    border-top-color: var(--orange);
+    animation: spin 1.3s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-banner {
+    border-radius: 22px;
+    padding: 26px 14px;
+    text-align: center;
+    margin-top: 6px;
+  }
+  .result-banner.red { background: linear-gradient(135deg, #DC2626, #F87171); }
+  .result-banner.blue { background: linear-gradient(135deg, #3B82F6, #22D3EE); }
+  .result-banner.tie { background: var(--bg-4); border: 1px solid var(--border); }
+  .result-banner .lbl {
+    font-family: var(--heading-font);
+    font-size: 12px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); font-weight: 700;
+  }
+  .result-banner .who {
+    font-family: var(--display-font);
+    font-size: clamp(36px, 9vw, 56px);
+    letter-spacing: 0.07em;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  }
+</style>
+</head>
+<body>
+
+<div id="js-check" style="background:#7F1D1D;color:#fff;padding:16px 20px;margin:14px;border-radius:14px;font:600 15px/1.6 -apple-system,system-ui,sans-serif;text-align:center;">
+  ⚠️ JavaScript не запущен — приложение не будет работать.<br>
+  Откройте страницу в обычном браузере (Safari, Chrome), а не в предпросмотре файла.
+</div>
+
+<div class="app">
+
+  <div class="header">
+    <h1 id="event-title">Meteor Breaking Camp</h1>
+    <div class="sub">Судейская система • Battle Judging</div>
+    <div class="status-pill"><span id="conn-dot" class="status-dot"></span><span id="conn-text">Не подключено</span></div>
+  </div>
+
+  <!-- HOST LANDING -->
+  <div id="host-landing">
+    <div class="card">
+      <h2>Главный компьютер</h2>
+      <p class="hint">Создайте судейскую комнату — судьи подключатся по QR-коду</p>
+      <div class="field-label">Название мероприятия (можно менять в любой момент)</div>
+      <input id="event-input" class="text-input" type="text" value="Meteor Breaking Camp" maxlength="40">
+      <button id="create-room-btn" class="btn primary" type="button">⚔ Создать судейскую комнату</button>
+      <button id="continue-room-btn" class="btn dark" type="button" style="display:none;">Продолжить прошлую комнату</button>
+      <div id="hosting-warning" style="display:none; margin-top:14px; background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.4); border-radius:12px; padding:12px 14px; font-family:var(--heading-font); font-size:13px; line-height:1.6; color:var(--yellow);">
+        ⚠️ Файл открыт с компьютера (file://). Судьи не смогут открыть его по ссылке.
+        Загрузите файл на бесплатный хостинг (Netlify Drop, GitHub Pages) и открывайте по интернет-адресу.
+      </div>
+    </div>
+  </div>
+
+  <!-- HOST APP -->
+  <div id="host-app" style="display:none;">
+    <div class="grid-2">
+      <div class="card">
+        <h2>Комната судей</h2>
+        <p class="hint">Судьи сканируют QR или открывают ссылку в Safari</p>
+        <div style="text-align:center;">
+          <div class="room-code" id="room-code-view">----</div>
+          <div class="qr-box"><div id="qr"></div></div>
+          <div class="room-link" id="room-link-view"></div>
+          <button id="copy-link-btn" class="btn dark" type="button">📋 Скопировать ссылку</button>
+        </div>
+        <div class="field-label">Название мероприятия</div>
+        <input id="event-input-live" class="text-input" type="text" maxlength="40">
+        <div class="field-label">Судьи онлайн: <span id="judges-count">0</span></div>
+        <div class="judges-list" id="judges-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Текущий батл</h2>
+        <p class="hint" id="battle-state-hint">Введите никнеймы и откройте голосование</p>
+        <div class="field-label">Красный угол</div>
+        <input id="red-input" class="text-input" type="text" placeholder="NICKNAME" maxlength="20" style="border-color:rgba(220,38,38,0.5);">
+        <div class="field-label">Синий угол</div>
+        <input id="blue-input" class="text-input" type="text" placeholder="NICKNAME" maxlength="20" style="border-color:rgba(59,130,246,0.5);">
+        <button id="open-vote-btn" class="btn orange" type="button">🔔 Открыть голосование</button>
+
+        <div id="live-board" style="display:none;">
+          <div class="tally">
+            <div class="tally-side red" id="tally-red">
+              <div class="nm" id="tally-red-name">RED</div>
+              <div class="cnt" id="tally-red-cnt">0</div>
+            </div>
+            <div class="tally-vs">VS</div>
+            <div class="tally-side blue" id="tally-blue">
+              <div class="nm" id="tally-blue-name">BLUE</div>
+              <div class="cnt" id="tally-blue-cnt">0</div>
+            </div>
+          </div>
+          <div class="verdict" id="verdict"></div>
+          <button id="close-vote-btn" class="btn gold" type="button">⛔ Завершить голосование</button>
+          <div id="tie-controls" style="display:none;">
+            <p class="hint" style="margin-top:12px;">Ничья — главный судья решает:</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <button id="tie-red-btn" class="btn" type="button" style="background:linear-gradient(90deg,#DC2626,#F87171);">Красный</button>
+              <button id="tie-blue-btn" class="btn" type="button" style="background:linear-gradient(90deg,#3B82F6,#22D3EE);">Синий</button>
+            </div>
+          </div>
+          <button id="new-battle-btn" class="btn dark" type="button" style="display:none;">➕ Новый батл</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>История батлов</h2>
+      <p class="hint">Завершённые батлы этой сессии</p>
+      <div id="history"></div>
+    </div>
+  </div>
+
+  <!-- JUDGE APP -->
+  <div id="judge-app" style="display:none;">
+    <div class="card" id="judge-gate">
+      <h2>Вход судьи</h2>
+      <p class="hint">Представьтесь — имя увидит главный судья</p>
+      <input id="judge-name-input" class="text-input body" type="text" placeholder="Ваше имя" maxlength="20">
+      <button id="judge-join-btn" class="btn primary" type="button">Войти в судейство</button>
+    </div>
+
+    <div id="judge-stage" style="display:none;">
+      <div class="card">
+        <p class="hint" style="margin-bottom:4px;">Судья: <span id="judge-name-view" style="color:var(--orange);"></span></p>
+        <div id="judge-waiting" class="waiting-block">
+          <div class="pulse"></div>
+          <div class="big">Ожидание батла…</div>
+        </div>
+        <div id="judge-vote" style="display:none;">
+          <div class="vote-stage">
+            <button class="vote-btn red" id="vote-red-btn" type="button">
+              <span class="side-label">Красный угол</span>
+              <span class="nick" id="vote-red-name">RED</span>
+            </button>
+            <div class="vote-status" id="vote-status">Нажмите на победителя</div>
+            <button class="vote-btn blue" id="vote-blue-btn" type="button">
+              <span class="side-label">Синий угол</span>
+              <span class="nick" id="vote-blue-name">BLUE</span>
+            </button>
+          </div>
+        </div>
+        <div id="judge-result" style="display:none;">
+          <div id="result-banner" class="result-banner">
+            <div class="lbl">Победитель батла</div>
+            <div class="who" id="result-who">—</div>
+          </div>
+          <div class="vote-status" style="margin-top:12px;">Ожидайте следующий батл</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
+<script>
+(function(){
+  var jsCheck = document.getElementById('js-check');
+  if(jsCheck && jsCheck.parentNode) jsCheck.parentNode.removeChild(jsCheck);
+  window.onerror = function(msg, src, line){
+    try {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:99999;background:#7F1D1D;color:#fff;padding:12px 16px;border-radius:12px;font:14px/1.5 sans-serif;';
+      d.textContent = '⚠ Ошибка: ' + msg + ' (строка ' + line + ')';
+      document.body.appendChild(d);
+    } catch(e) {}
+  };
+
+  // ===== Helpers =====
+  function $(id){ return document.getElementById(id); }
+  function up(s){ return (s || '').trim().toUpperCase(); }
+
+  var BROKERS = [
+    'wss://broker.emqx.io:8084/mqtt',
+    'wss://broker.hivemq.com:8884/mqtt'
+  ];
+  var connDot = $('conn-dot');
+  var connText = $('conn-text');
+
+  var params = new URLSearchParams(location.search);
+  var roomParam = up(params.get('room') || '');
+  var isJudge = roomParam.length > 0;
+
+  var client = null;
+  var brokerIdx = 0;
+  var room = '';
+  var topicBase = '';
+
+  function setConn(state, text){
+    connDot.className = 'status-dot' + (state === 'on' ? ' on' : state === 'err' ? ' err' : '');
+    connText.textContent = text;
+  }
+
+  function connect(onReady){
+    if(typeof mqtt === 'undefined'){
+      setConn('err', 'Нет связи с интернетом');
+      alert('Не удалось загрузить библиотеку связи. Проверьте интернет и перезагрузите страницу.');
+      return;
+    }
+    var url = BROKERS[brokerIdx % BROKERS.length];
+    setConn('', 'Подключение…');
+    try { if(client) { client.end(true); } } catch(e){}
+    client = mqtt.connect(url, {
+      clean: true,
+      connectTimeout: 9000,
+      reconnectPeriod: 4000,
+      clientId: 'mbc_' + Math.random().toString(16).slice(2, 10)
+    });
+    var readyFired = false;
+    client.on('connect', function(){
+      setConn('on', 'Связь установлена');
+      if(!readyFired){ readyFired = true; onReady(); }
+    });
+    client.on('reconnect', function(){ setConn('', 'Переподключение…'); });
+    client.on('error', function(){
+      setConn('err', 'Ошибка связи');
+    });
+    client.on('close', function(){
+      if(!readyFired){
+        brokerIdx++;
+        if(brokerIdx < BROKERS.length){
+          setTimeout(function(){ connect(onReady); }, 500);
+        } else {
+          setConn('err', 'Сервер связи недоступен');
+        }
+      } else {
+        setConn('', 'Нет связи — переподключение…');
+      }
+    });
+  }
+
+  function publish(topic, obj, retain){
+    if(!client) return;
+    try {
+      client.publish(topic, JSON.stringify(obj), { qos: 0, retain: !!retain });
+    } catch(e){}
+  }
+
+  function parse(payload){
+    try { return JSON.parse(payload.toString()); } catch(e){ return null; }
+  }
+
+  function makeRoomCode(){
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    var s = '';
+    for(var i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
+    return s;
+  }
+
+  // ============================================================
+  // HOST MODE
+  // ============================================================
+  function startHost(){
+    var landing = $('host-landing');
+    var hostApp = $('host-app');
+    var eventInput = $('event-input');
+    var eventInputLive = $('event-input-live');
+    var eventTitle = $('event-title');
+
+    var savedEvent = null;
+    try { savedEvent = localStorage.getItem('mbcEventName'); } catch(e){}
+    if(savedEvent){ eventInput.value = savedEvent; eventTitle.textContent = savedEvent; }
+
+    var savedRoom = null;
+    try { savedRoom = localStorage.getItem('mbcRoom'); } catch(e){}
+    if(savedRoom){
+      var cont = $('continue-room-btn');
+      cont.style.display = 'block';
+      cont.textContent = 'Продолжить комнату ' + savedRoom;
+      cont.onclick = function(){ beginHost(savedRoom); };
+    }
+
+    if(location.protocol === 'file:'){
+      $('hosting-warning').style.display = 'block';
+    }
+
+    $('create-room-btn').onclick = function(){ beginHost(makeRoomCode()); };
+
+    var state = {
+      event: '',
+      battleId: 0,
+      red: '', blue: '',
+      status: 'idle',           // idle | open | closed
+      counts: { red: 0, blue: 0 },
+      winner: null,             // 'red' | 'blue' | null
+      votes: {}                 // published only on close
+    };
+    var votes = {};              // name -> 'red' | 'blue'
+    var judges = {};             // name -> lastSeen ms
+    var history = [];
+
+    function beginHost(code){
+      room = up(code);
+      topicBase = 'meteorbc/' + room;
+      state.event = eventInput.value.trim() || 'Meteor Breaking Camp';
+      try {
+        localStorage.setItem('mbcEventName', state.event);
+        localStorage.setItem('mbcRoom', room);
+      } catch(e){}
+
+      landing.style.display = 'none';
+      hostApp.style.display = 'block';
+      eventTitle.textContent = state.event;
+      eventInputLive.value = state.event;
+      $('room-code-view').textContent = room;
+
+      var link = location.origin + location.pathname + '?room=' + room;
+      if(location.protocol === 'file:') link = '(нужен интернет-хостинг) ?room=' + room;
+      $('room-link-view').textContent = link;
+      $('copy-link-btn').onclick = function(){
+        try {
+          navigator.clipboard.writeText(link);
+          $('copy-link-btn').textContent = '✓ Скопировано';
+          setTimeout(function(){ $('copy-link-btn').textContent = '📋 Скопировать ссылку'; }, 1500);
+        } catch(e){ prompt('Скопируйте ссылку:', link); }
+      };
+      try {
+        new QRCode($('qr'), { text: link, width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff' });
+      } catch(e){}
+
+      connect(function(){
+        client.subscribe(topicBase + '/vote');
+        client.subscribe(topicBase + '/hello');
+        client.on('message', onHostMessage);
+        publishState();
+      });
+    }
+
+    function publishState(){
+      var pub = {
+        event: state.event,
+        battleId: state.battleId,
+        red: state.red, blue: state.blue,
+        status: state.status,
+        counts: state.counts,
+        winner: state.winner,
+        votes: state.status === 'closed' ? votes : {}
+      };
+      publish(topicBase + '/state', pub, true);
+    }
+
+    function onHostMessage(topic, payload){
+      var msg = parse(payload);
+      if(!msg) return;
+      if(topic === topicBase + '/hello' && msg.name){
+        judges[msg.name] = Date.now();
+        renderJudges();
+      }
+      if(topic === topicBase + '/vote' && msg.name && msg.vote){
+        judges[msg.name] = Date.now();
+        if(state.status === 'open' && msg.battleId === state.battleId && (msg.vote === 'red' || msg.vote === 'blue')){
+          votes[msg.name] = msg.vote;
+          recount();
+          publishState();
+        }
+        renderJudges();
+      }
+    }
+
+    function recount(){
+      var r = 0, b = 0;
+      for(var k in votes){ if(votes[k] === 'red') r++; else if(votes[k] === 'blue') b++; }
+      state.counts = { red: r, blue: b };
+      $('tally-red-cnt').textContent = r;
+      $('tally-blue-cnt').textContent = b;
+    }
+
+    function renderJudges(){
+      var list = $('judges-list');
+      list.innerHTML = '';
+      var names = Object.keys(judges).sort();
+      var now = Date.now();
+      var online = 0;
+      names.forEach(function(n){
+        if(now - judges[n] > 90000) return; // считаем оффлайн после 90 сек тишины
+        online++;
+        var row = document.createElement('div'); row.className = 'judge-row';
+        var nm = document.createElement('div'); nm.className = 'judge-name'; nm.textContent = n;
+        var chip = document.createElement('div');
+        var v = state.status !== 'idle' ? votes[n] : null;
+        chip.className = 'judge-vote-chip ' + (v === 'red' ? 'red' : v === 'blue' ? 'blue' : 'none');
+        chip.textContent = v === 'red' ? 'КРАСНЫЙ' : v === 'blue' ? 'СИНИЙ' : '—';
+        row.appendChild(nm); row.appendChild(chip);
+        list.appendChild(row);
+      });
+      $('judges-count').textContent = online;
+    }
+    setInterval(renderJudges, 10000);
+
+    eventInputLive.oninput = function(){
+      state.event = eventInputLive.value.trim() || 'Meteor Breaking Camp';
+      eventTitle.textContent = state.event;
+      try { localStorage.setItem('mbcEventName', state.event); } catch(e){}
+      publishState();
+    };
+
+    $('open-vote-btn').onclick = function(){
+      var r = up($('red-input').value);
+      var b = up($('blue-input').value);
+      if(!r || !b){ alert('Введите никнеймы красного и синего угла.'); return; }
+      state.battleId++;
+      state.red = r; state.blue = b;
+      state.status = 'open';
+      state.winner = null;
+      votes = {};
+      recount();
+      $('tally-red-name').textContent = r;
+      $('tally-blue-name').textContent = b;
+      $('tally-red').classList.remove('win');
+      $('tally-blue').classList.remove('win');
+      $('verdict').textContent = '';
+      $('live-board').style.display = 'block';
+      $('open-vote-btn').style.display = 'none';
+      $('close-vote-btn').style.display = 'block';
+      $('tie-controls').style.display = 'none';
+      $('new-battle-btn').style.display = 'none';
+      $('battle-state-hint').textContent = 'Голосование открыто — судьи выбирают на телефонах';
+      $('red-input').disabled = true;
+      $('blue-input').disabled = true;
+      publishState();
+      renderJudges();
+    };
+
+    $('close-vote-btn').onclick = function(){
+      state.status = 'closed';
+      var r = state.counts.red, b = state.counts.blue;
+      if(r > b) finishBattle('red');
+      else if(b > r) finishBattle('blue');
+      else {
+        // ничья — решает главный судья
+        $('close-vote-btn').style.display = 'none';
+        $('tie-controls').style.display = 'block';
+        $('verdict').textContent = 'НИЧЬЯ ' + r + ':' + b;
+        publishState();
+      }
+    };
+    $('tie-red-btn').onclick = function(){ finishBattle('red'); };
+    $('tie-blue-btn').onclick = function(){ finishBattle('blue'); };
+
+    function finishBattle(winner){
+      state.status = 'closed';
+      state.winner = winner;
+      publishState();
+      var winName = winner === 'red' ? state.red : state.blue;
+      $('verdict').textContent = '🏆 ' + winName + ' (' + state.counts.red + ':' + state.counts.blue + ')';
+      if(winner === 'red') $('tally-red').classList.add('win');
+      else $('tally-blue').classList.add('win');
+      $('close-vote-btn').style.display = 'none';
+      $('tie-controls').style.display = 'none';
+      $('new-battle-btn').style.display = 'block';
+      $('battle-state-hint').textContent = 'Батл завершён';
+      history.push({ red: state.red, blue: state.blue, counts: { red: state.counts.red, blue: state.counts.blue }, winner: winner });
+      renderHistory();
+      renderJudges();
+    }
+
+    $('new-battle-btn').onclick = function(){
+      state.status = 'idle';
+      state.winner = null;
+      state.red = ''; state.blue = '';
+      votes = {};
+      $('red-input').disabled = false;
+      $('blue-input').disabled = false;
+      $('red-input').value = '';
+      $('blue-input').value = '';
+      $('live-board').style.display = 'none';
+      $('open-vote-btn').style.display = 'block';
+      $('battle-state-hint').textContent = 'Введите никнеймы и откройте голосование';
+      publishState();
+      renderJudges();
+    };
+
+    function renderHistory(){
+      var h = $('history');
+      h.innerHTML = '';
+      if(history.length === 0){
+        var e = document.createElement('p'); e.className = 'hint'; e.textContent = 'Пока пусто';
+        h.appendChild(e);
+        return;
+      }
+      history.slice().reverse().forEach(function(item, idx){
+        var row = document.createElement('div'); row.className = 'history-row';
+        var left = document.createElement('span');
+        var redCls = item.winner === 'red' ? 'w-red' : '';
+        var blueCls = item.winner === 'blue' ? 'w-blue' : '';
+        left.innerHTML = '<span class="' + redCls + '">' + item.red + (item.winner === 'red' ? ' 🏆' : '') + '</span>'
+          + ' <span style="color:var(--text-low);">vs</span> '
+          + '<span class="' + blueCls + '">' + item.blue + (item.winner === 'blue' ? ' 🏆' : '') + '</span>';
+        var score = document.createElement('span'); score.className = 'score';
+        score.textContent = item.counts.red + ' : ' + item.counts.blue;
+        row.appendChild(left); row.appendChild(score);
+        h.appendChild(row);
+      });
+    }
+    renderHistory();
+  }
+
+  // ============================================================
+  // JUDGE MODE
+  // ============================================================
+  function startJudge(){
+    $('host-landing').style.display = 'none';
+    $('judge-app').style.display = 'block';
+
+    room = roomParam;
+    topicBase = 'meteorbc/' + room;
+
+    var myName = '';
+    try { myName = localStorage.getItem('mbcJudgeName') || ''; } catch(e){}
+    var nameInput = $('judge-name-input');
+    nameInput.value = myName;
+
+    var lastState = null;
+    var myVoteBattleId = -1;
+    var myVote = null;
+
+    $('judge-join-btn').onclick = function(){
+      var n = nameInput.value.trim();
+      if(!n){ alert('Введите имя.'); return; }
+      myName = n;
+      try { localStorage.setItem('mbcJudgeName', myName); } catch(e){}
+      $('judge-gate').style.display = 'none';
+      $('judge-stage').style.display = 'block';
+      $('judge-name-view').textContent = myName;
+
+      connect(function(){
+        client.subscribe(topicBase + '/state');
+        client.on('message', onJudgeMessage);
+        sayHello();
+      });
+      setInterval(sayHello, 25000);
+    };
+
+    function sayHello(){
+      if(myName) publish(topicBase + '/hello', { name: myName });
+    }
+
+    function onJudgeMessage(topic, payload){
+      if(topic !== topicBase + '/state') return;
+      var st = parse(payload);
+      if(!st) return;
+      lastState = st;
+      if(st.event){ $('event-title').textContent = st.event; }
+      renderJudgeStage();
+    }
+
+    function renderJudgeStage(){
+      var st = lastState;
+      var waiting = $('judge-waiting');
+      var voteBlock = $('judge-vote');
+      var resultBlock = $('judge-result');
+      if(!st || st.status === 'idle'){
+        waiting.style.display = 'block';
+        voteBlock.style.display = 'none';
+        resultBlock.style.display = 'none';
+        return;
+      }
+      if(st.status === 'open'){
+        waiting.style.display = 'none';
+        resultBlock.style.display = 'none';
+        voteBlock.style.display = 'block';
+        $('vote-red-name').textContent = st.red;
+        $('vote-blue-name').textContent = st.blue;
+        var selRed = (myVoteBattleId === st.battleId && myVote === 'red');
+        var selBlue = (myVoteBattleId === st.battleId && myVote === 'blue');
+        $('vote-red-btn').classList.toggle('selected', selRed);
+        $('vote-blue-btn').classList.toggle('selected', selBlue);
+        $('vote-status').textContent = (selRed || selBlue)
+          ? 'Ваш голос принят — можно изменить до закрытия'
+          : 'Нажмите на победителя';
+        return;
+      }
+      if(st.status === 'closed'){
+        waiting.style.display = 'none';
+        voteBlock.style.display = 'none';
+        resultBlock.style.display = 'block';
+        var banner = $('result-banner');
+        var who = $('result-who');
+        if(st.winner === 'red'){
+          banner.className = 'result-banner red';
+          who.textContent = st.red + ' (' + st.counts.red + ':' + st.counts.blue + ')';
+        } else if(st.winner === 'blue'){
+          banner.className = 'result-banner blue';
+          who.textContent = st.blue + ' (' + st.counts.red + ':' + st.counts.blue + ')';
+        } else {
+          banner.className = 'result-banner tie';
+          who.textContent = 'НИЧЬЯ ' + st.counts.red + ':' + st.counts.blue + ' — решает главный судья';
+        }
+      }
+    }
+
+    function castVote(v){
+      if(!lastState || lastState.status !== 'open') return;
+      myVote = v;
+      myVoteBattleId = lastState.battleId;
+      publish(topicBase + '/vote', { name: myName, battleId: lastState.battleId, vote: v });
+      renderJudgeStage();
+      if(navigator.vibrate) navigator.vibrate(40);
+    }
+    $('vote-red-btn').onclick = function(){ castVote('red'); };
+    $('vote-blue-btn').onclick = function(){ castVote('blue'); };
+  }
+
+  // ===== ENTRY =====
+  if(isJudge) startJudge();
+  else startHost();
+})();
+</script>
+
+</body>
+</html>
